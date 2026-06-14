@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 13 Pro - 100% Operational Desktop</title>
+    <style>
+        :root {
+            --accent-color: #0078d4;
+            --taskbar-bg: rgba(16, 16, 16, 0.85);
+            --window-bg: #f3f3f3;
+            --win-border: #999;
+            --menu-bg: rgba(28, 28, 28, 0.95);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2560') no-repeat center center/cover;
+        }
+
+        /* Desktop Workspace Area */
+        #desktop {
+            width: 100%;
+            height: calc(100% - 40px);
+            position: relative;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-content: flex-start;
+            flex-wrap: wrap;
+        }
+
+        /* Windows 10 Style Icons */
+        .desktop-item {
+            width: 75px;
+            height: 85px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 2px;
+        }
+
+        .desktop-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .desktop-item.selected {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .icon-img {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .item-name {
+            color: white;
+            font-size: 11px;
+            margin-top: 5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Native Windows 10 Layout File Explorer Window */
+        .win10-window {
+            position: absolute;
+            width: 650px;
+            height: 450px;
+            background: white;
+            border: 1px solid var(--win-border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            z-index: 10;
+            border-radius: 3px;
+            overflow: hidden;
+            top: 15%;
+            left: 25%;
+        }
+
+        .title-bar {
+            height: 30px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-left: 10px;
+            cursor: move;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .title-title {
+            font-size: 12px;
+            color: #333;
+        }
+
+        .window-controls {
+            display: flex;
+            height: 100%;
+        }
+
+        .win-btn {
+            width: 45px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #000;
+            cursor: pointer;
+        }
+
+        .win-btn:hover {
+            background: #e5e5e5;
+        }
+
+        .win-btn.close-btn:hover {
+            background: #e81123;
+            color: white;
+        }
+
+        .address-bar-container {
+            height: 35px;
+            border-bottom: 1px solid #d9d9d9;
+            background: #f3f3f3;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            gap: 5px;
+        }
+
+        .address-input {
+            flex: 1;
+            height: 24px;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 0 8px;
+            font-size: 12px;
+            color: #333;
+            outline: none;
+        }
+
+        .explorer-body {
+            display: flex;
+            flex: 1;
+            height: calc(100% - 65px);
+        }
+
+        .sidebar {
+            width: 150px;
+            background: #f0f0f0;
+            border-right: 1px solid #d9d9d9;
+            padding: 10px 5px;
+            font-size: 12px;
+        }
+
+        .sidebar-item {
+            padding: 6px 8px;
+            cursor: pointer;
+            border-radius: 2px;
+        }
+
+        .sidebar-item:hover {
+            background: #e5e5e5;
+        }
+
+        .file-grid {
+            flex: 1;
+            background: white;
+            padding: 15px;
+            display: flex;
+            gap: 20px;
+            align-content: flex-start;
+            flex-wrap: wrap;
+            overflow-y: auto;
+        }
+
+        .explorer-folder {
+            width: 70px;
+            height: 75px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        /* 100% Accurate Windows 10 Dark Start Menu Panel */
+        #start-menu-popup {
+            position: absolute;
+            bottom: 40px;
+            left: 0;
+            width: 520px;
+            height: 550px;
+            background: var(--menu-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            display: none;
+            z-index: 5000;
+            box-shadow: 5px 0 25px rgba(0,0,0,0.5);
+            color: white;
+        }
+
+        .start-menu-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Far Left Icons (Power, Settings) */
+        .start-left-rail {
+            width: 45px;
+            height: 100%;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 10px;
+            gap: 15px;
+        }
+
+        .rail-btn {
+            width: 100%;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .rail-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* App List Menu Grid */
+        .start-app-list {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            font-size: 13px;
+        }
+
+        .app-list-heading {
+            color: var(--accent-color);
+            font-weight: bold;
+            margin: 10px 0 5px 5px;
+        }
+
+        .start-app-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .start-app-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Windows 10 Metro Tiles Panel Selection */
+        .start-tiles-panel {
+            width: 260px;
+            background: rgba(0,0,0,0.1);
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-auto-rows: 100px;
+            gap: 8px;
+            overflow-y: auto;
+        }
+
+        .metro-tile {
+            background: var(--accent-color);
+            padding: 10px;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .metro-tile:hover {
+            transform: scale(0.98);
+            outline: 2px solid rgba(255,255,255,0.4);
+        }
+
+        /* Taskbar Configuration Layout */
+        #taskbar {
+            width: 100%;
+            height: 40px;
+            background: var(--taskbar-bg);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10000;
+        }
+
+        .taskbar-left {
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
+
+        /* Glass Start Button */
+        #start-button {
+            width: 48px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #start-button:hover, #start-button.active-btn {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .logo-square-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+        }
+
+        .logo-square-grid span {
+            width: 8px;
+            height: 8px;
+            background: #fff;
+        }
+
+        /* Rajdip Search Container */
+        #rajdip-search-wrapper {
+            width: 240px;
+            height: 30px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            margin-left: 5px;
+        }
+
+        #rajdip-search-wrapper:focus-within {
+            background: white;
+            border: 1px solid var(--accent-color);
+        }
+
+        #rajdip-search-wrapper input {
+            background: transparent;
+            border: none;
+            outline: none;
+            width: 100%;
+            color: white;
+            font-size: 12px;
+        }
+
+        #rajdip-search-wrapper input:focus {
+            color: black;
+        }
+
+        #rajdip-search-wrapper input::placeholder {
+            color: #ccc;
+        }
+
+        #rajdip-search-wrapper input:focus::placeholder {
+            color: #777;
+        }
+
+        /* Rajdip Engine Overlay UI Popup */
+        #rajdip-search-popup {
+            position: absolute;
+            bottom: 40px;
+            left: 48px;
+            width: 380px;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.6);
+            display: none;
+            flex-direction: column;
+            color: white;
+            padding: 10px;
+            z-index: 2000;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .search-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--accent-color);
+            margin-bottom: 8px;
+            font-weight: bold;
+            padding-left: 5px;
+        }
+
+        .search-item {
+            padding: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.15s;
+        }
+
+        .search-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Right Click Context Menu */
+        #right-click-menu {
+            position: absolute;
+            background: #f2f2f2;
+            border: 1px solid #bababa;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.15);
+            display: none;
+            flex-direction: column;
+            padding: 3px 0;
+            z-index: 20000;
+            width: 150px;
+        }
+
+        .menu-option {
+            padding: 6px 20px;
+            font-size: 12px;
+            color: black;
+            cursor: pointer;
+        }
+
+        .menu-option:hover {
+            background: #91c9f7;
+        }
+
+        .tray-clock {
+            color: white;
+            font-size: 11px;
+            padding-right: 12px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body onclick="closePopups()" oncontextmenu="openContextMenu(event)">
+
+    <!-- Desktop Workspace Frame -->
+    <div id="desktop">
+        <div class="desktop-item" onclick="selectItem(event, this)" ondblclick="openSystemFolderById('thispc')">
+            <div class="icon-img">🖥️</div>
+            <div class="item-name">This PC</div>
+        </div>
+        <div class="desktop-item" onclick="selectItem(event, this)" ondblclick="openSystemFolderById('rajdipdb')">
+            <div class="icon-img">⚡</div>
+            <div class="item-name">Rajdip Database</div>
+        </div>
+    </div>
+
+    <!-- Active Windows 10 Style Explorer Window Panel Frame -->
+    <div id="file-explorer" class="win10-window" onclick="event.stopPropagation()">
+        <div class="title-bar" id="window-drag-header">
+            <span class="title-title" id="explorer-title-text">File Explorer</span>
+            <div class="window-controls">
+                <div class="win-btn">—</div>
+                <div class="win-btn">⬜</div>
+                <div class="win-btn close-btn" onclick="closeSystemExplorer()">✕</div>
+            </div>
+        </div>
+        <div class="address-bar-container">
+            <span style="font-size: 14px;">📁</span>
+            <input type="text" class="address-input" id="explorer-address-path" readonly value="This PC">
+        </div>
+        <div class="explorer-body">
+            <div class="sidebar">
+                <div class="sidebar-item" onclick="openSystemFolderById('thispc')">🖥️ This PC</div>
+                <div class="sidebar-item" onclick="openSystemFolderById('rajdipdb')">⚡ Rajdip Engine</div>
+            </div>
+            <div class="file-grid" id="explorer-file-display-grid">
+                <!-- Inner items load dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 100% REAL WORKING WINDOWS 10 START MENU INTERFACE -->
+    <div id="start-menu-popup" onclick="event.stopPropagation()">
+        <div class="start-menu-container">
+            <!-- Left Side Actions Bar -->
+            <div class="start-left-rail">
+                <div class="rail-btn" title="User Profile">👤</div>
+                <div class="rail-btn" title="Settings" onclick="alert('System Settings Loaded App Profile!')">⚙️</div>
+                <div class="rail-btn" title="Power Options" onclick="if(confirm('Shut down Windows 13?')) location.reload();">Shut down ⚙️</div>
+            </div>
+            
+            <!-- Standard App A-Z Directory Tree List -->
+            <div class="start-app-list">
+                <div class="app-list-heading">R</div>
+                <div class="start-app-item" onclick="openSystemFolderById('rajdipdb')">⚡ Rajdip AI Core Engine</div>
+                
+                <div class="app-list-heading">W</div>
+                <div class="start-app-item" onclick="openSystemFolderById('thispc')">📁 Windows File Explorer</div>
+                <div class="start-app-item" onclick="createNewDesktopFolder()">➕ Create New Folder</div>
+            </div>
+
+            <!-- Classic Interactive Live Metro Tiles Section -->
+            <div class="start-tiles-panel">
+                <div class="metro-tile" onclick="openSystemFolderById('thispc')">
+                    <span>This PC</span>
+                </div>
+                <div class="metro-tile" style="background: #e17055;" onclick="openSystemFolderById('rajdipdb')">
+                    <span>Rajdip Data Core</span>
+                </div>
+                <div class="metro-tile" style="background: #2ed573; grid-column: span 2;" onclick="alert('Launching Live browser updates...')">
+                    <span>Weather Status Live</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Native Operation Right-Click Context OS Menu -->
+    <div id="right-click-menu" onclick="event.stopPropagation()">
+        <div class="menu-option" onclick="createNewDesktopFolder()">📁 New Folder</div>
+        <div class="menu-option" onclick="location.reload()">🔄 Refresh</div>
+    </div>
+
+    <!-- Rajdip Search Engine Result Panel Frame Panel -->
+    <div id="rajdip-search-popup" onclick="event.stopPropagation()">
+        <div class="search-title">Rajdip Search Engine Index</div>
+        <div id="search-dynamic-results">
+            <!-- Match entries inject here dynamically -->
+        </div>
+    </div>
+
+    <!-- Bottom Operating System Taskbar Base Layer -->
+    <div id="taskbar" onclick="event.stopPropagation()">
+        <div class="taskbar-left">
+            <!-- Working Start Button Functionality linked cleanly -->
+            <div id="start-button" onclick="toggleStartMenu(event)">
+                <div class="logo-square-grid">
+                    <span></span><span></span>
+                    <span></span><span></span>
+                </div>
+            </div>
+            
+            <!-- Interactive Rajdip Engine Bar Box layout -->
+            <div id="rajdip-search-wrapper">
+                <span style="margin-right: 5px; font-size: 12px;">🔍</span>
+                <input type="text" id="rajdip-search-bar-input" placeholder="Search files or folders..." oninput="queryRajdipEngine(this.value)" onclick="event.stopPropagation()">
+            </div>
+        </div>
+
+        <div class="tray-clock">
+            <div id="clock-time" style="font-weight: 500;">00:00 PM</div>
+            <div id="clock-date" style="color: #bbb; font-size: 10px;">2026-01-01</div>
+        </div>
+    </div>
+
+    <script>
+        let uniqueFolderIdCount = 1;
+        
+        // Comprehensive Memory system mapping elements across search indexing routines
+        let systemFoldersRegistry = [
+            { id: "thispc", name: "This PC", items: ['💾 Local Disk (C:)', '💾 Local Disk (D:)', '📁 Documents', '📁 Downloads'] },
+            { id: "rajdipdb", name: "Rajdip Database", items: ['📂 Core_System', '📂 User_Data', '🌐 Rajdip_AI_Network'] }
+        ];
+
+        // Real-time Clock execution system
+        function renderClock() {
+            const today = new Date();
+            document.getElementById('clock-time').innerText = today.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('clock-date').innerText = today.toLocaleDateString();
+        }
+        setInterval(renderClock, 1000);
+        renderClock();
+
+        // 100% Functional Start Menu Trigger Control
+        function toggleStartMenu(event) {
+            event.stopPropagation();
+            const startMenu = document.getElementById('start-menu-popup');
+            const startBtn = document.getElementById('start-button');
+            
+            // Close search panel if start menu is initializing 
+            document.getElementById('rajdip-search-popup').style.display = 'none';
+
+            if (startMenu.style.display === 'block') {
+                startMenu.style.display = 'none';
+                startBtn.classList.remove('active-btn');
+            } else {
+                startMenu.style.display = 'block';
+                startBtn.classList.add('active-btn');
+            }
+        }
+
+        // Selection highlight mapping
+        function selectItem(e, element) {
+            e.stopPropagation();
+            document.querySelectorAll('.desktop-item').forEach(i => i.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        // Right-click desktop menu trigger
+        function openContextMenu(e) {
+            e.preventDefault();
+            const menu = document.getElementById('right-click-menu');
+            menu.style.display = 'flex';
+            menu.style.left = e.clientX + 'px';
+            menu.style.top = e.clientY + 'px';
+        }
+
+        // Auto-close open menus when empty background is clicked like real Windows
+        function closePopups() {
+            document.getElementById('right-click-menu').style.display = 'none';
+            document.getElementById('rajdip-search-popup').style.display = 'none';
+            document.getElementById('start-menu-popup').style.display = 'none';
+            document.getElementById('start-button').classList.remove('active-btn');
+            document.querySelectorAll('.desktop-item').forEach(i => i.classList.remove('selected'));
+        }
+
+        // Real User-Generated Dynamic Folders Setup
+        function createNewDesktopFolder() {
+            const desktop = document.getElementById('desktop');
+            const currentFolderName = `New Folder ${uniqueFolderIdCount++}`;
+            const generatedId = "folder_" + Date.now();
+
+            // Store inside memory array
+            systemFoldersRegistry.push({
+                id: generatedId,
+                name: currentFolderName,
+                items: ["📄 System Data File.log", "📄 Manifest.xml"]
+            });
+
+            const folderDiv = document.createElement('div');
+            folderDiv.className = 'desktop-item';
+            folderDiv.onclick = function(e) { selectItem(e, folderDiv); };
+            folderDiv.ondblclick = function(e) {
+                e.stopPropagation();
+                openSystemFolderById(generatedId);
+            };
+
+            folderDiv.innerHTML = `
+                <div class="icon-img">📁</div>
+                <div class="item-name">${currentFolderName}</div>
+            `;
+            desktop.appendChild(folderDiv);
+            closePopups();
+        }
+
+        // Global System Window Launcher
+        function openSystemFolderById(id) {
+            const folderData = systemFoldersRegistry.find(f => f.id === id);
+            if (folderData) {
+                openSystemExplorer(folderData.name, folderData.items);
+                // Clean close navigation panels upon load sequence
+                closePopups();
+                document.getElementById('rajdip-search-bar-input').value = "";
+            }
+        }
+
+        function openSystemExplorer(title, insideItemsArray) {
+            const explorer = document.getElementById('file-explorer');
+            document.getElementById('explorer-title-text').innerText = title;
+            document.getElementById('explorer-address-path').value = `This PC > ${title}`;
+            
+            const grid = document.getElementById('explorer-file-display-grid');
+            grid.innerHTML = ''; 
+
+            insideItemsArray.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'explorer-folder';
+                itemDiv.innerHTML = `
+                    <div style="font-size: 28px;">📄</div>
+                    <div style="font-size: 11px; color: black; margin-top:4px; max-width:65px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item}</div>
+                `;
+                grid.appendChild(itemDiv);
+            });
+            
+            explorer.style.display = 'flex';
+        }
+
+        // Hide File explorer view
+        function closeSystemExplorer() {
+            document.getElementById('file-explorer').style.display = 'none';
+        }
+
+        // Fully Responsive Dynamic Search Processing Routines 
+        function queryRajdipEngine(searchTerm) {
+            const popup = document.getElementById('rajdip-search-popup');
+            const resultsDiv = document.getElementById('search-dynamic-results');
+            
+            // Hide Start Menu if user starts searching
+            document.getElementById('start-menu-popup').style.display = 'none';
+            document.getElementById('start-button').classList.remove('active-btn');
+
+            if(searchTerm.trim() === "") {
+                popup.style.display = 'none';
+                return;
+            }
+
+            popup.style.display = 'flex';
+            resultsDiv.innerHTML = '';
+
+            systemFoldersRegistry.forEach(folder => {
+                if(folder.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    const resultRow = document.createElement('div');
+                    resultRow.className = 'search-item';
+                    resultRow.innerHTML = `📁 <span><b>${folder.name}</b> (System Folder)</span>`;
+                    
+                    resultRow.onclick = function() {
+                        openSystemFolderById(folder.id);
+                    };
+
+                    resultsDiv.appendChild(resultRow);
+                }
+            });
+
+            const webResultRow = document.createElement('div');
+            webResultRow.className = 'search-item';
+            webResultRow.style.color = "#0078d4";
+            webResultRow.innerHTML = `🌐 <span>Search Rajdip Web for: "${searchTerm}"</span>`;
+            webResultRow.onclick = function() {
+                alert(`Rajdip Web Engine querying: "${searchTerm}"`);
+                closePopups();
+            };
+            resultsDiv.appendChild(webResultRow);
+        }
+
+        // Traditional Window Physics Drag Handler
+        const dragWindow = document.getElementById("file-explorer");
+        let iX = 0, iY = 0, cX = 0, cY = 0;
+        document.getElementById("window-drag-header").onmousedown = startDragging;
+
+        function startDragging(e) {
+            e.preventDefault();
+            cX = e.clientX;
+            cY = e.clientY;
+            document.onmouseup = stopDragging;
+            document.onmousemove = moving;
+        }
+
+        function moving(e) {
+            e.preventDefault();
+            iX = cX - e.clientX;
+            iY = cY - e.clientY;
+            cX = e.clientX;
+            cY = e.clientY;
+            dragWindow.style.top = (dragWindow.offsetTop - iY) + "px";
+            dragWindow.style.left = (dragWindow.offsetLeft - iX) + "px";
+        }
+
+        function stopDragging() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+        }
+    </script>
+</body>
+</html>
