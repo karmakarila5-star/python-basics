@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RAJDIP - 3D Minecraft Universe</title>
+    <!-- Core 3D engine library -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        /* Game HUD layout */
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(15, 23, 42, 0.85);
+            color: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #38bdf8;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 1000;
+            width: 260px;
+        }
+        h1 { margin: 0 0 5px 0; color: #38bdf8; font-size: 28px; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .character-btn {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .character-btn:hover { background: #38bdf8; }
+        
+        /* Aiming Crosshair */
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid #ff0055;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Target Crosshair -->
+    <div id="crosshair"></div>
+
+    <!-- The Heads-Up Display -->
+    <div id="hud">
+        <h1>RAJDIP</h1>
+        <p style="margin: 0 0 15px 0; color: #94a3b8;">3D Infinite Village Engine</p>
+        <div><strong>Current Character:</strong> <span id="char-name" style="color:#38bdf8;">Rajdip (Hero)</span></div>
+        <p style="font-size: 12px; color: #94a3b8; margin: 10px 0;">Controls: W,A,S,D to Walk<br>Mouse click to <b>SHOOT GUN</b></p>
+        <hr style="border-color: #334155;">
+        <label style="font-size: 13px; display:block; margin-bottom:5px;">Swap Character:</label>
+        <button class="character-btn" onclick="changeCharacter('Rajdip (Hero)', '#38bdf8')">Rajdip</button>
+        <button class="character-btn" onclick="changeCharacter('Shadow Strike', '#a855f7')">Shadow</button>
+        <button class="character-btn" onclick="changeCharacter('Cyber Pulse', '#22c55e')">Cyborg</button>
+    </div>
+
+    <!-- 3D Scene Container -->
+    <a-scene id="scene" click-to-shoot>
+        <a-sky color="#64b5f6"></a-sky>
+        <a-ambient-light type="ambient" color="#ffffff" intensity="0.6"></a-ambient-light>
+        <a-light type="directional" color="#fff" intensity="0.8" position="-1 2 1"></a-light>
+
+        <!-- Dynamic World Entity Holder -->
+        <a-entity id="world"></a-entity>
+
+        <!-- Player Camera Entity with Gun Attached -->
+        <a-entity id="rig" position="25 5 25">
+            <a-entity id="camera" camera look-controls wasd-controls="acceleration: 45">
+                
+                <!-- THE GUN: Locked to player perspective -->
+                <a-entity id="gun" position="0.35 -0.25 -0.6" rotation="0 90 0">
+                    <!-- Gun Main Body -->
+                    <a-box width="0.4" height="0.1" depth="0.08" color="#1e293b"></a-box>
+                    <!-- Gun Barrel -->
+                    <a-cylinder radius="0.03" height="0.3" color="#64748b" rotation="0 0 90" position="0.2 0.02 0"></a-cylinder>
+                    <!-- Gun Handle -->
+                    <a-box width="0.08" height="0.2" depth="0.07" color="#0f172a" position="-0.15 -0.1 0" rotation="0 0 15"></a-box>
+                    <!-- Laser Sight Dot Core -->
+                    <a-box width="0.1" height="0.02" depth="0.02" color="#38bdf8" position="0.1 0.06 0"></a-box>
+                </a-entity>
+                
+            </a-entity>
+        </a-entity>
+    </a-scene>
+
+    <script>
+        // Character Panel System
+        function changeCharacter(name, laserColor) {
+            document.getElementById('char-name').innerText = name;
+            document.getElementById('char-name').style.color = laserColor;
+            // Update the laser scope dot on the gun to match character color
+            document.getElementById('gun').children[3].setAttribute('color', laserColor);
+        }
+
+        // Map Size Settings (Generates a massive 60x60 grid world)
+        const MAP_SIZE = 60;
+        const world = document.getElementById('world');
+
+        // Block Color Hex-Codes
+        const GRASS = "#4ade80", DIRT = "#78350f", STONE = "#64748b", OAK = "#a16207", ROOF = "#b91c1c", WINDOW = "#93c5fd";
+
+        // Step 1: Terrain Array loop
+        for (let x = 0; x < MAP_SIZE; x++) {
+            for (let z = 0; z < MAP_SIZE; z++) {
+                
+                // Formula to generate natural smooth rolling hills
+                let heightValue = Math.floor((Math.sin(x * 0.1) + Math.cos(z * 0.1)) * 2) + 3;
+
+                // Build layers down to bedrock
+                createBlock(x, heightValue, z, GRASS);
+                createBlock(x, heightValue - 1, z, DIRT);
+                for(let y = heightValue - 2; y >= 0; y--) {
+                    createBlock(x, y, z, STONE);
+                }
+
+                // Step 2: Spawn Village Houses at regular intervals
+                if (x % 14 === 0 && z % 14 === 0 && x > 5 && z > 5) {
+                    generateVillageHouse(x, heightValue + 1, z);
+                }
+            }
+        }
+
+        // Village House Generator Function
+        function generateVillageHouse(baseX, baseY, baseZ) {
+            let houseWidth = 4;
+            let houseHeight = 4;
+            let houseDepth = 4;
+
+            // Generate structural outer walls
+            for(let hX = 0; hX < houseWidth; hX++) {
+                for(let hY = 0; hY < houseHeight; hY++) {
+                    for(let hZ = 0; hZ < houseDepth; hZ++) {
+                        // Keep it hollow, only build outer shell boundaries
+                        if(hX === 0 || hX === houseWidth-1 || hZ === 0 || hZ === houseDepth-1) {
+                            let blockColor = OAK;
+                            
+                            if(hY === 0) blockColor = STONE; // Cobblestone foundations
+                            if(hY === 2 && (hX === 2 || hZ === 2)) blockColor = WINDOW; // Glass Windows
+
+                            createBlock(baseX + hX, baseY + hY, baseZ + hZ, blockColor);
+                        }
+                    }
+                }
+            }
+
+            // Generate Pitch Roof caps
+            for(let rX = -1; rX <= houseWidth; rX++) {
+                for(let rZ = -1; rZ <= houseDepth; rZ++) {
+                    createBlock(baseX + rX, baseY + houseHeight, baseZ + rZ, ROOF);
+                }
+            }
+        }
+
+        // Function helper to create single voxel blocks
+        function createBlock(x, y, z, color) {
+            let box = document.createElement('a-box');
+            box.setAttribute('position', `${x} ${y} ${z}`);
+            box.setAttribute('width', '1');
+            box.setAttribute('height', '1');
+            box.setAttribute('depth', '1');
+            box.setAttribute('color', color);
+            box.setAttribute('material', 'roughness: 0.9; metalness: 0.05');
+            world.appendChild(box);
+        }
+
+        // Step 3: Laser Blaster Shoot Component Engine Logic
+        AFRAME.registerComponent('click-to-shoot', {
+            init: function () {
+                window.addEventListener('click', () => {
+                    const rig = document.getElementById('rig');
+                    const cam = document.getElementById('camera');
+                    
+                    // Trace camera heading vector
+                    const direction = new THREE.Vector3();
+                    cam.object3D.getWorldDirection(direction);
+                    direction.multiplyScalar(-1); // Reverse direction vector matrix to face forwards
+
+                    // Create laser projectile sphere
+                    let laser = document.createElement('a-sphere');
+                    laser.setAttribute('radius', '0.07');
+                    
+                    // Get weapon color profile active inside character selectors
+                    let laserColor = document.getElementById('char-name').style.color || "#38bdf8";
+                    laser.setAttribute('color', laserColor);
+                    
+                    // Spawn positioning parameters calculations
+                    let startX = rig.object3D.position.x + cam.object3D.position.x;
+                    let startY = rig.object3D.position.y + cam.object3D.position.y;
+                    let startZ = rig.object3D.position.z + cam.object3D.position.z;
+                    
+                    laser.setAttribute('position', `${startX} ${startY} ${startZ}`);
+                    laser.setAttribute('velocity', `${direction.x * 40} ${direction.y * 40} ${direction.z * 40}`);
+                    document.getElementById('scene').appendChild(laser);
+
+                    // Frame animation loops
+                    let projectileInterval = setInterval(() => {
+                        let pos = laser.getAttribute('position');
+                        let vel = laser.getAttribute('velocity').split(' ');
+                        laser.setAttribute('position', `${parseFloat(pos.x) + parseFloat(vel[0])*0.02} ${parseFloat(pos.y) + parseFloat(vel[1])*0.02} ${parseFloat(pos.z) + parseFloat(vel[2])*0.02}`);
+                    }, 20);
+
+                    // Automatically purge spent game instances safely from system RAM arrays after 1.5s
+                    setTimeout(() => { 
+                        clearInterval(projectileInterval);
+                        laser.remove(); 
+                    }, 1500);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
