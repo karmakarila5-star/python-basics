@@ -1,10 +1,16 @@
-# Step 1: Ask the user to input the current temperature
-temperature = float(input("Enter the current temperature in Celsius: "))
+while True:
+    user_input = input("Enter a character (or type 'quit' to stop): ")
 
-# Step 2: Check the temperature using conditional statements
-if temperature >= 25:
-    print("It is warm enough! You can wear light and soft clothes safely.")
-elif temperature >= 15:
-    print("The weather is mild. A light long-sleeve shirt or light layers would be best.")
-else:
-    print("It is too cold! Keep wearing your jacket or pullover to stay warm.")
+    if user_input == "quit":
+        print("Goodbye!")
+        break
+
+    if len(user_input) == 0:
+        print("Error: You did not type anything.")
+    elif len(user_input) > 1:
+        print("Error: You typed more than one character.")
+    else:
+        if user_input.isalpha():
+            print(f"'{user_input}' is an alphabet.")
+        else:
+            print(f"'{user_input}' is not an alphabet.")
